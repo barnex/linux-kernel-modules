@@ -1,4 +1,4 @@
-//#include <asm/uaccess.h>
+#include <asm/uaccess.h>
 #include <linux/device.h>
 #include <linux/fs.h>
 //#include <linux/init.h>
@@ -14,17 +14,32 @@ MODULE_DESCRIPTION("my first character device");
 MODULE_VERSION("0.0");
 
 static int majorNumber; // device number
-static char message[256];
-static int len_message;
-static int countOpens;
+static char message[256] = "Hello from the linux kernel!\n";
+static int len_message = 29;
 static struct class* myClass = NULL;
 static struct device* myDevice = NULL;
 
 static int dev_open(struct inode *inodep, struct file *filep){
+	printk(KERN_INFO "Arne's character device: open\n");
 	return 0;
 }
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
+	int n; 
+	int err; 
+
+	printk(KERN_INFO "Arne's character device: read %zu bytes at %lld\n", len, *offset);
+
+	n = len;
+	if(n>len_message){
+		n = len_message;	
+	}
+
+	err = copy_to_user(buffer, message, n);
+	if (err != 0){
+		printk(KERN_INFO "Arne's character devide: dev_read failed: %d\n", err);	
+	}
+	printk(KERN_INFO "Arne's character device: dev_read success: %d bytes\n", n);
 	return 0;
 }
 
