@@ -56,20 +56,31 @@ static int __init chardev_init(void){
 
 	myClass = class_create(THIS_MODULE, CLASS_NAME);
 	if (IS_ERR(myClass)){
-		class_destroy(myClass);
 		unregister_chrdev(majorNumber, DEVICE_NAME);	
-		printk(KERN_ALERT "Arne's character device: device_create failed\n");
+		printk(KERN_ALERT "Arne's character device: class_create failed\n");
 		return PTR_ERR(myClass);
 	}
 	printk(KERN_INFO "Arne's character device: class_create: OK\n");
 
+	myDevice = device_create(myClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+	if (IS_ERR(myDevice)){
+		class_destroy(myClass);
+		unregister_chrdev(majorNumber, DEVICE_NAME);	
+		printk(KERN_ALERT "Arne's character device: device_create failed\n");
+		return PTR_ERR(myDevice);
+	}
 
 
 	return 0;
 }
 
 static void __exit chardev_exit(void){
-	printk(KERN_INFO "Arne's character device: unloading\n");
+	printk(KERN_INFO "Arne's character device: unloading: starting\n");
+	device_destroy(myClass, MKDEV(majorNumber, 0));
+	class_unregister(myClass);
+	class_destroy(myClass);
+	unregister_chrdev(majorNumber, DEVICE_NAME);
+	printk(KERN_INFO "Arne's character device: unloading: done\n");
 }
 
 module_init(chardev_init);
