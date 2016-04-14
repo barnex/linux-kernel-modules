@@ -36,18 +36,19 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 	int err; 
 
 	if (pos >= len_message){
-		pos = 0;	
+		pos = 0;
+		printk(KERN_INFO "hellodev: EOF\n");
 		return 0; //EOF
 	}
 
 	printk(KERN_INFO "hellodev: request %zu bytes at %lld\n", len, *offset);
 
 	n = len;
-	if(n>len_message){
-		n = len_message;	
+	if(n>len_message-pos){
+		n = len_message-pos;	
 	}
 
-	err = copy_to_user(buffer, message, n);
+	err = copy_to_user(buffer, &message[pos], n);
 	if (err != 0){
 		printk(KERN_INFO "hellodev: dev_read failed: %d\n", err);	
 		return -EFAULT;
@@ -59,6 +60,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 static int dev_release(struct inode *inodep, struct file *filep){
 	printk(KERN_INFO "hellodev: close\n");
+	pos = 0;
 	mutex_unlock(&mu);
 	return 0;
 }
