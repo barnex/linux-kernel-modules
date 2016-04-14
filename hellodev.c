@@ -2,6 +2,7 @@
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/module.h>
+#include <linux/mutex.h>
 
 #define DEVICE_NAME "hello" // device will be at /dev/hello
 #define CLASS_NAME  "hellodev"
@@ -17,12 +18,17 @@ static int len_message = 29;
 static struct class* dev_class = NULL;
 static struct device* dev_device = NULL;
 
+static DEFINE_MUTEX(mu);
+
 static int dev_open(struct inode *inodep, struct file *filep){
+	if(!mutex_trylock(&mu)){
+		printk(KERN_INFO "hellodev: open: busy\n");
+		return -EBUSY;					
+	}
 	printk(KERN_INFO "hellodev: open\n");
 	return 0;
 }
 
-//static DEFINE_MUTEX(mu);
 static int pos = 0;
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
@@ -53,6 +59,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 static int dev_release(struct inode *inodep, struct file *filep){
 	printk(KERN_INFO "hellodev: close\n");
+	mutex_unlock(&mu);
 	return 0;
 }
 
@@ -100,6 +107,7 @@ static int __init chardev_init(void){
 
 static void __exit chardev_exit(void){
 	printk(KERN_INFO "hellodev: unloading: starting\n");
+	mutex_destroy(&mu); // what if in use?
 	device_destroy(dev_class, MKDEV(major, 0));
 	class_unregister(dev_class);
 	class_destroy(dev_class);
