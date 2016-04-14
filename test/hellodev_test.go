@@ -8,7 +8,7 @@ import (
 const dev = "/dev/hello"
 
 func TestOpenClose(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		f, err := os.Open(dev)
 		if err != nil {
 			t.Fatal(err)

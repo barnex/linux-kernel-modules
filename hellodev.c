@@ -52,6 +52,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 }
 
 static int dev_release(struct inode *inodep, struct file *filep){
+	printk(KERN_INFO "hellodev: close\n");
 	return 0;
 }
 
