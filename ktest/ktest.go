@@ -8,12 +8,17 @@ import (
 	"testing"
 )
 
+// Where to look for *.ko files
 var ModulePath = "./"
 
-func MustInsmod(t *testing.T, fname string) {
-	MustCmd(t, "insmod", path.Join(ModulePath, fname, ".ko"))
+// MustInsmod loads module (found in ModulePath, no .ko extension),
+// and fails t in case of an error
+func MustInsmod(t *testing.T, module string) {
+	MustCmd(t, "insmod", path.Join(ModulePath, module, ".ko"))
 }
 
+// MustCmd executes the command "prog arg1 arg2 ...",
+// and fails t in case of an error.
 func MustCmd(t *testing.T, prog string, args ...string) {
 	cmd := exec.Command(prog, args...)
 	out, err := cmd.CombinedOutput()
