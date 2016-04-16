@@ -5,25 +5,26 @@
 #include <linux/mutex.h>
 
 #define DEVICE_NAME "hello" // device will be at /dev/hello
-#define CLASS_NAME  "hellodev"
+#define CLASS_NAME  "hello"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("barnex");
-MODULE_DESCRIPTION("Hello world character device.");
-MODULE_VERSION("0.0");
+MODULE_DESCRIPTION("Fun with Linux char devices.");
+MODULE_VERSION("0.3");
 
-static int major; // device number
-static char message[256] = "Hello from the linux kernel!\n";
-static int len_message = 29;
+static int major;
 static struct class* dev_class = NULL;
 static struct device* dev_device = NULL;
 
+static char message[256] = "Hello from the linux kernel!\n";
+static int len_message = 29;
+
 static DEFINE_MUTEX(mu);
 
-static int dev_open(struct inode *inodep, struct file *filep){
-	if(!mutex_trylock(&mu)){
+static int dev_open(struct inode *inodep, struct file *filep) {
+	if(!mutex_trylock(&mu)) {
 		printk(KERN_INFO "hellodev: open: busy\n");
-		return -EBUSY;					
+		return -EBUSY;
 	}
 	printk(KERN_INFO "hellodev: open\n");
 	return 0;
@@ -31,11 +32,11 @@ static int dev_open(struct inode *inodep, struct file *filep){
 
 static int pos = 0;
 
-static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
-	int n; 
-	int err; 
+static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset) {
+	int n;
+	int err;
 
-	if (pos >= len_message){
+	if (pos >= len_message) {
 		pos = 0;
 		printk(KERN_INFO "hellodev: EOF\n");
 		return 0; //EOF
@@ -44,13 +45,13 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 	printk(KERN_INFO "hellodev: request %zu bytes at %lld\n", len, *offset);
 
 	n = len;
-	if(n>len_message-pos){
-		n = len_message-pos;	
+	if(n>len_message-pos) {
+		n = len_message-pos;
 	}
 
 	err = copy_to_user(buffer, &message[pos], n);
-	if (err != 0){
-		printk(KERN_INFO "hellodev: dev_read failed: %d\n", err);	
+	if (err != 0) {
+		printk(KERN_INFO "hellodev: dev_read failed: %d\n", err);
 		return -EFAULT;
 	}
 	pos += n;
@@ -58,14 +59,14 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 	return n;
 }
 
-static int dev_release(struct inode *inodep, struct file *filep){
+static int dev_release(struct inode *inodep, struct file *filep) {
 	printk(KERN_INFO "hellodev: close\n");
 	pos = 0;
 	mutex_unlock(&mu);
 	return 0;
 }
 
-static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
+static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset) {
 	return 0;
 }
 
@@ -77,28 +78,28 @@ static struct file_operations fops = {
 	.write= dev_write,
 };
 
-static int __init chardev_init(void){
+static int __init chardev_init(void) {
 	printk(KERN_INFO "hellodev: loading\n");
 
 	major = register_chrdev(0, DEVICE_NAME, &fops);
-	if(major < 0){
+	if(major < 0) {
 		printk(KERN_ALERT "hellodev: register_chrdev failed\n");
-		return major;	
+		return major;
 	}
 	printk(KERN_INFO "hellodev: register_chrdev: %d\n", major);
 
 	dev_class = class_create(THIS_MODULE, CLASS_NAME);
-	if (IS_ERR(dev_class)){
-		unregister_chrdev(major, DEVICE_NAME);	
+	if (IS_ERR(dev_class)) {
+		unregister_chrdev(major, DEVICE_NAME);
 		printk(KERN_ALERT "hellodev: class_create failed\n");
 		return PTR_ERR(dev_class);
 	}
 	printk(KERN_INFO "hellodev: class_create: OK\n");
 
 	dev_device = device_create(dev_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
-	if (IS_ERR(dev_device)){
+	if (IS_ERR(dev_device)) {
 		class_destroy(dev_class);
-		unregister_chrdev(major, DEVICE_NAME);	
+		unregister_chrdev(major, DEVICE_NAME);
 		printk(KERN_ALERT "hellodev: device_create failed\n");
 		return PTR_ERR(dev_device);
 	}
@@ -107,7 +108,7 @@ static int __init chardev_init(void){
 	return 0;
 }
 
-static void __exit chardev_exit(void){
+static void __exit chardev_exit(void) {
 	printk(KERN_INFO "hellodev: unloading: starting\n");
 	mutex_destroy(&mu); // what if in use?
 	device_destroy(dev_class, MKDEV(major, 0));
