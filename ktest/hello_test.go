@@ -1,18 +1,35 @@
 package ktest
 
-import "testing"
+import (
+	"fmt"
+	"os"
+	"testing"
+)
 
 const module = "hello"
 
-func TestInsmod(t *testing.T) {
-	Cmd("rmmod", module)
+func init() {
+	Rmmod(module)
+	if err := Insmod(module); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
 
-	for i := 0; i < 10; i++ {
-		MustInsmod(t, module)
-		MustRmmod(t, module)
+func TestRmmod(t *testing.T) {
+	if err := Rmmod(module); err != nil {
+		t.Fatal(err)
+	}
+	if HaveModule(module) {
+		t.Fatalf("rmmod %v: module still in /proc/modules", module)
 	}
 
-	MustInsmod(t, module)
+	if err := Insmod(module); err != nil {
+		t.Fatal(err)
+	}
+	if !HaveModule(module) {
+		t.Fatalf("insmod %v: module not in /proc/modules", module)
+	}
 }
 
 //const dev = "/dev/hello"
