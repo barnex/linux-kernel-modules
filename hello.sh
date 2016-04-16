@@ -1,6 +1,7 @@
 #! /bin/bash
+module=hello
 set -e
-astyle --indent=tab --style=java hello.c
+astyle --indent=tab --style=java $module.c
 make
 rm -f ./ktest/*.test
 (cd ktest && go test -c)

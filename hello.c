@@ -2,8 +2,14 @@
 #include <linux/module.h>
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("barnex");
+MODULE_DESCRIPTION("Fun with char devices.");
+MODULE_VERSION("0.2");
 
 #define NAME "hello"
+
+//TODO: exercise parameters
+//TODO: exercise *current
 
 static int __init mod_init(void) {
 	printk(KERN_INFO "%s: init\n", NAME);
