@@ -59,9 +59,11 @@ func TestBusy(t *testing.T) {
 	}
 
 	f2, err2 := os.Open(dev)
-	if f2 != nil || err2 == nil {
-		t.Fatalf("open %v: expected nil, EBUSY, got: %v, %v", dev, f2, err2)
+	if err2 != nil {
+		t.Fatalf("open %v: %v", dev, err2)
 	}
+	defer f2.Close()
+
 	if err := f1.Close(); err != nil {
 		t.Fatal(err)
 	}
