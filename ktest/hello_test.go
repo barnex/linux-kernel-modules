@@ -5,6 +5,13 @@ import "testing"
 const module = "hello"
 
 func TestInsmod(t *testing.T) {
+	Cmd("rmmod", module)
+
+	for i := 0; i < 10; i++ {
+		MustInsmod(t, module)
+		MustRmmod(t, module)
+	}
+
 	MustInsmod(t, module)
 }
 
