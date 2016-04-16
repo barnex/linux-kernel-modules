@@ -5,7 +5,7 @@
 #include <linux/mutex.h>
 
 #define DEVICE_NAME "hello" // device will be at /dev/hello
-#define CLASS_NAME  "hello"
+#define CLASS_NAME  "hellodevice"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("barnex");
@@ -30,38 +30,30 @@ static int dev_open(struct inode *inodep, struct file *filep) {
 	return 0;
 }
 
-static int pos = 0;
-
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset) {
 	int n;
 	int err;
 
-	if (pos >= len_message) {
-		pos = 0;
-		printk(KERN_INFO "hellodev: EOF\n");
+	if (*offset >= len_message) {
 		return 0; //EOF
 	}
 
-	printk(KERN_INFO "hellodev: request %zu bytes at %lld\n", len, *offset);
-
 	n = len;
-	if(n>len_message-pos) {
-		n = len_message-pos;
+	if(n>len_message-*offset) {
+		n = len_message-*offset;
 	}
 
-	err = copy_to_user(buffer, &message[pos], n);
+	err = copy_to_user(buffer, &message[*offset], n);
 	if (err != 0) {
 		printk(KERN_INFO "hellodev: dev_read failed: %d\n", err);
 		return -EFAULT;
 	}
-	pos += n;
-	printk(KERN_INFO "hellodev: dev_read success: %d bytes\n", n);
+	*offset += n;
 	return n;
 }
 
 static int dev_release(struct inode *inodep, struct file *filep) {
 	printk(KERN_INFO "hellodev: close\n");
-	pos = 0;
 	mutex_unlock(&mu);
 	return 0;
 }
