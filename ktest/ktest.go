@@ -3,7 +3,7 @@ package ktest
 import (
 	"fmt"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -14,7 +14,7 @@ var ModulePath = "./"
 // MustInsmod loads module (found in ModulePath, no .ko extension),
 // and fails t in case of an error
 func MustInsmod(t *testing.T, module string) {
-	MustCmd(t, "insmod", path.Join(ModulePath, module, ".ko"))
+	MustCmd(t, "insmod", filepath.Join(ModulePath, module+".ko"))
 }
 
 // MustCmd executes the command "prog arg1 arg2 ...",

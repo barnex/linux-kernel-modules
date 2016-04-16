@@ -2,10 +2,6 @@ package ktest
 
 import "testing"
 
-func init() {
-	ModulePath = "../"
-}
-
 const module = "hello"
 
 func TestInsmod(t *testing.T) {
