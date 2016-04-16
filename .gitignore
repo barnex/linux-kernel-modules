@@ -1,0 +1,12 @@
+*.o
+*.ko
+*.mod.c
+Module.symvers
+modules.order
+*.cmd
+.tmp_versions
+
+ktest/*.test
+
+*.swp
+*.orig
