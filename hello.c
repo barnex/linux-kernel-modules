@@ -2,6 +2,7 @@
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/module.h>
+#include "hello.h"
 
 #define DEVICE_NAME "hello" // device will be at /dev/hello
 #define CLASS_NAME  "hellodevice"
@@ -55,29 +56,27 @@ static struct file_operations fops = {
 	.release = dev_release,
 };
 
-static int __init chardev_init(void) {
-	printk(KERN_INFO "hellodev: loading\n");
-
+static int __init mod_init(void) {
 	major = register_chrdev(0, DEVICE_NAME, &fops);
 	if(major < 0) {
 		printk(KERN_ALERT "hellodev: register_chrdev failed\n");
+		mod_exit();
 		return major;
 	}
 	printk(KERN_INFO "hellodev: register_chrdev: %d\n", major);
 
 	dev_class = class_create(THIS_MODULE, CLASS_NAME);
 	if (IS_ERR(dev_class)) {
-		unregister_chrdev(major, DEVICE_NAME);
 		printk(KERN_ALERT "hellodev: class_create failed\n");
+		mod_exit();
 		return PTR_ERR(dev_class);
 	}
 	printk(KERN_INFO "hellodev: class_create: OK\n");
 
 	dev_device = device_create(dev_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
 	if (IS_ERR(dev_device)) {
-		class_destroy(dev_class);
-		unregister_chrdev(major, DEVICE_NAME);
 		printk(KERN_ALERT "hellodev: device_create failed\n");
+		mod_exit();
 		return PTR_ERR(dev_device);
 	}
 	printk(KERN_INFO "hellodev: device_create: OK\n");
@@ -85,7 +84,7 @@ static int __init chardev_init(void) {
 	return 0;
 }
 
-static void __exit chardev_exit(void) {
+static void mod_exit(void) {
 	if (dev_device != NULL) {
 		printk(KERN_INFO "hellodev: device_destroy\n");
 		device_destroy(dev_class, MKDEV(major, 0));
@@ -101,5 +100,5 @@ static void __exit chardev_exit(void) {
 	}
 }
 
-module_init(chardev_init);
-module_exit(chardev_exit);
+module_init(mod_init);
+module_exit(mod_exit);
