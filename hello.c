@@ -31,8 +31,8 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 	}
 
 	n = len;
-	if(n>len_message-*offset) {
-		n = len_message-*offset;
+	if (n > len_message - *offset) {
+		n = len_message - *offset;
 	}
 
 	err = copy_to_user(buffer, &message[*offset], n);
@@ -48,17 +48,11 @@ static int dev_release(struct inode *inodep, struct file *filep) {
 	return 0;
 }
 
-static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset) {
-	return 0;
-}
-
-
 static struct file_operations fops = {
 	.owner = THIS_MODULE,
 	.open = dev_open,
 	.read = dev_read,
 	.release = dev_release,
-	.write= dev_write,
 };
 
 static int __init chardev_init(void) {
@@ -86,18 +80,25 @@ static int __init chardev_init(void) {
 		printk(KERN_ALERT "hellodev: device_create failed\n");
 		return PTR_ERR(dev_device);
 	}
-
+	printk(KERN_INFO "hellodev: device_create: OK\n");
 
 	return 0;
 }
 
 static void __exit chardev_exit(void) {
-	printk(KERN_INFO "hellodev: unloading: starting\n");
-	device_destroy(dev_class, MKDEV(major, 0));
-	class_unregister(dev_class);
-	class_destroy(dev_class);
-	unregister_chrdev(major, DEVICE_NAME);
-	printk(KERN_INFO "hellodev: unloading: done\n");
+	if (dev_device != NULL) {
+		printk(KERN_INFO "hellodev: device_destroy\n");
+		device_destroy(dev_class, MKDEV(major, 0));
+	}
+	if (dev_class != NULL) {
+		printk(KERN_INFO "hellodev: class_destroy\n");
+		class_unregister(dev_class);
+		class_destroy(dev_class);
+	}
+	if (major != 0) {
+		printk(KERN_INFO "hellodev: unregister_chrdev\n");
+		unregister_chrdev(major, DEVICE_NAME);
+	}
 }
 
 module_init(chardev_init);
